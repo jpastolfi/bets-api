@@ -12,7 +12,8 @@ namespace TryBets.Users.Services
         private readonly TokenOptions _tokenOptions;
         public TokenManager()
         {
-            _tokenOptions = new TokenOptions {
+            _tokenOptions = new TokenOptions
+            {
                 Secret = "4d82a63bbdc67c1e4784ed6587f3730c",
                 ExpiresDay = 1
             };
@@ -20,7 +21,21 @@ namespace TryBets.Users.Services
 
         public string Generate(User user)
         {
-            throw new NotImplementedException();
+            var claims = new ClaimsIdentity();
+            claims.AddClaim(new Claim(ClaimTypes.Email, user.Email!));
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenDescriptor = new SecurityTokenDescriptor()
+            {
+                Subject = claims,
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_tokenOptions.Secret!)),
+                    SecurityAlgorithms.HmacSha256Signature
+                ),
+                Expires = DateTime.Now.AddDays(_tokenOptions.ExpiresDay)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
     }
 }
